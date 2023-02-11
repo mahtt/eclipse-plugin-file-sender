@@ -1,6 +1,8 @@
 package GUI.UI;
 
 import java.awt.EventQueue;
+import java.awt.Window;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -10,14 +12,18 @@ import GUI.util.McProfileStorage;
 import GUI.util.Microcontroller;
 import javax.swing.JOptionPane;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.DefaultListModel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.event.ActionEvent;
 import javax.swing.JTextField;
 import javax.swing.JList;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingUtilities;
 import javax.swing.JLabel;
 import java.io.File;
 import java.util.HashMap;
@@ -42,7 +48,7 @@ public class Gui extends JFrame {
 	private JList<String> profileList;
 	private JLabel labelFilePath;
 	private JLabel labelNameOfSelectedProfile;
-	private McProfileStorage mcs;
+	private McProfileStorage mcs, mcs_old;
 	private HashMap<String, Microcontroller> profiles;
 	private DefaultListModel<String> mod;
 
@@ -55,6 +61,13 @@ public class Gui extends JFrame {
 				try {
 					Gui frame = new Gui();
 					frame.setVisible(true);
+					// discard changes if user closes window without saving
+					frame.addWindowListener(new WindowAdapter() {
+						public void windowClosing(WindowEvent we) {
+							discardChanges();
+							dispose();
+						}
+					});
 				} catch (Exception e) {
 					displayMessage("An error occured.");
 				}
@@ -73,6 +86,7 @@ public class Gui extends JFrame {
 
 		// Serialization
 		mcs = new McProfileStorage();
+		mcs_old = mcs.getDeepCopy();
 		profiles = mcs.getMc();
 		updateProfileList();
 
@@ -217,6 +231,27 @@ public class Gui extends JFrame {
 		});
 
 		labelNameOfSelectedProfile = new JLabel("-");
+
+		// cancel button
+		JButton cancelButton = new JButton("Cancel");
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				discardChanges();
+				JComponent comp = (JComponent) e.getSource();
+				Window win = SwingUtilities.getWindowAncestor(comp);
+				win.dispose();
+			}
+		});
+
+		// save button
+		JButton saveButton = new JButton("Save");
+		saveButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JComponent comp = (JComponent) e.getSource();
+				Window win = SwingUtilities.getWindowAncestor(comp);
+				win.dispose();
+			}
+		});
 		GroupLayout gl_contentPane = new GroupLayout(contentPane);
 		gl_contentPane.setHorizontalGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
 				.createSequentialGroup().addGap(31)
@@ -226,39 +261,47 @@ public class Gui extends JFrame {
 										GroupLayout.PREFERRED_SIZE)
 								.addGap(85).addComponent(labelAdd))
 						.addGroup(gl_contentPane.createSequentialGroup()
-								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING)
-										.addGroup(gl_contentPane.createSequentialGroup().addComponent(deleteButton)
-												.addGap(18).addComponent(editButton))
-										.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 229,
-												GroupLayout.PREFERRED_SIZE))
-								.addGap(85)
-								.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
-										.addGroup(gl_contentPane.createSequentialGroup().addComponent(labelName)
-												.addGap(10).addComponent(txtFieldName, GroupLayout.PREFERRED_SIZE, 379,
+								.addGroup(
+										gl_contentPane.createParallelGroup(Alignment.TRAILING)
+												.addGroup(gl_contentPane.createSequentialGroup()
+														.addComponent(deleteButton).addGap(18).addComponent(editButton))
+												.addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 229,
 														GroupLayout.PREFERRED_SIZE))
-										.addGroup(gl_contentPane.createSequentialGroup().addComponent(labelFileLocation)
-												.addGap(41).addComponent(ChooseFilePathButton,
-														GroupLayout.PREFERRED_SIZE, 96, GroupLayout.PREFERRED_SIZE))
-										.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
-												.addGroup(gl_contentPane.createSequentialGroup().addComponent(labelp)
-														.addPreferredGap(ComponentPlacement.RELATED,
-																GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-														.addComponent(txtFieldIp, GroupLayout.PREFERRED_SIZE, 379,
+								.addGroup(gl_contentPane.createParallelGroup(Alignment.TRAILING).addGroup(gl_contentPane
+										.createSequentialGroup().addGap(85)
+										.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING)
+												.addGroup(gl_contentPane.createSequentialGroup().addComponent(labelName)
+														.addGap(10).addComponent(txtFieldName,
+																GroupLayout.PREFERRED_SIZE, 379,
 																GroupLayout.PREFERRED_SIZE))
-												.addGroup(gl_contentPane.createSequentialGroup().addComponent(labelPort)
-														.addGap(21)
-														.addComponent(txtFieldPort, GroupLayout.PREFERRED_SIZE, 379,
-																GroupLayout.PREFERRED_SIZE))
-												.addComponent(addButton, Alignment.TRAILING))
-										.addComponent(labelFilePath, GroupLayout.PREFERRED_SIZE, 428,
-												GroupLayout.PREFERRED_SIZE)
-										.addGroup(gl_contentPane.createSequentialGroup()
-												.addComponent(labelSelectProfile, GroupLayout.PREFERRED_SIZE, 78,
+												.addGroup(gl_contentPane.createSequentialGroup()
+														.addComponent(labelFileLocation).addGap(29)
+														.addComponent(ChooseFilePathButton, GroupLayout.PREFERRED_SIZE,
+																96, GroupLayout.PREFERRED_SIZE))
+												.addGroup(gl_contentPane.createParallelGroup(Alignment.LEADING, false)
+														.addGroup(gl_contentPane.createSequentialGroup()
+																.addComponent(labelp)
+																.addPreferredGap(ComponentPlacement.RELATED,
+																		GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+																.addComponent(txtFieldIp, GroupLayout.PREFERRED_SIZE,
+																		379, GroupLayout.PREFERRED_SIZE))
+														.addGroup(gl_contentPane.createSequentialGroup()
+																.addComponent(labelPort).addGap(21)
+																.addComponent(txtFieldPort, GroupLayout.PREFERRED_SIZE,
+																		379, GroupLayout.PREFERRED_SIZE))
+														.addComponent(addButton, Alignment.TRAILING))
+												.addComponent(labelFilePath, GroupLayout.PREFERRED_SIZE, 428,
 														GroupLayout.PREFERRED_SIZE)
-												.addGap(18).addComponent(SelectProfileButton,
-														GroupLayout.PREFERRED_SIZE, 98, GroupLayout.PREFERRED_SIZE))
-										.addComponent(labelNameOfSelectedProfile, GroupLayout.DEFAULT_SIZE, 478,
-												Short.MAX_VALUE))))
+												.addGroup(gl_contentPane.createSequentialGroup()
+														.addComponent(labelSelectProfile, GroupLayout.PREFERRED_SIZE,
+																78, GroupLayout.PREFERRED_SIZE)
+														.addGap(18).addComponent(SelectProfileButton,
+																GroupLayout.PREFERRED_SIZE, 98,
+																GroupLayout.PREFERRED_SIZE))
+												.addComponent(labelNameOfSelectedProfile, GroupLayout.DEFAULT_SIZE, 478,
+														Short.MAX_VALUE)))
+										.addGroup(gl_contentPane.createSequentialGroup().addGap(384)
+												.addComponent(saveButton).addGap(25).addComponent(cancelButton)))))
 				.addContainerGap()));
 		gl_contentPane.setVerticalGroup(gl_contentPane.createParallelGroup(Alignment.LEADING).addGroup(gl_contentPane
 				.createSequentialGroup().addGap(21)
@@ -294,8 +337,9 @@ public class Gui extends JFrame {
 												GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
 								.addPreferredGap(ComponentPlacement.RELATED).addComponent(labelNameOfSelectedProfile)
 								.addGap(230)))
-				.addPreferredGap(ComponentPlacement.RELATED).addGroup(gl_contentPane
-						.createParallelGroup(Alignment.BASELINE).addComponent(editButton).addComponent(deleteButton))
+				.addPreferredGap(ComponentPlacement.RELATED)
+				.addGroup(gl_contentPane.createParallelGroup(Alignment.BASELINE).addComponent(editButton)
+						.addComponent(deleteButton).addComponent(cancelButton).addComponent(saveButton))
 				.addGap(18)));
 		contentPane.setLayout(gl_contentPane);
 
@@ -433,5 +477,20 @@ public class Gui extends JFrame {
 	 */
 	String getNameAssociatedWithListEntiry(String listEntry) {
 		return listEntry.substring(0, listEntry.indexOf("("));
+	}
+
+	/**
+	 * discards changes when user presses the cancel button or when user closes the
+	 * window without saving
+	 */
+	private void discardChanges() {
+		mcs = mcs_old.getDeepCopy();
+		if(mcs != null) {
+			mcs.writeMcS();
+		}
+		else {
+			displayMessage("An Error occured, discarding the changes.");
+		}
+		
 	}
 }

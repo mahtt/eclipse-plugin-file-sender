@@ -29,8 +29,8 @@ public class Client {
 	}
 
 	/**
-	 * 
-	 * @param request
+	 * sends a request to server
+	 * @param request to send
 	 */
 	public void sendRequest(int request) {
 		// check if storage is set up correctly
@@ -38,7 +38,7 @@ public class Client {
 		if (!profiles.isEmpty()) {
 			if (mcs.isProfileSelected()) {
 				Microcontroller m = mcs.getMc().get(mcs.getSelectedMcProfile());
-				if (!mcs.isFilepathSet()) {
+				if (!mcs.doesSelectedFileStillExist() && request != GlobalsDefs.GET_INTERPRETER_STATE) { //if the request is to get the interpreter status no file has to be specified
 					gui.displayMessage("Please specify a file and try again");
 					gui.launch();
 				} else {

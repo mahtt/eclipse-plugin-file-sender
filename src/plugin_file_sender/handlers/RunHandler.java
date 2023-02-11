@@ -7,6 +7,10 @@ import org.eclipse.core.commands.ExecutionException;
 import GUI.util.Client;
 import GUI.util.GlobalsDefs;
 
+/**
+ * Handler for the run button in the toolbar
+ *
+ */
 public class RunHandler extends AbstractHandler {
 	private Client client;
 

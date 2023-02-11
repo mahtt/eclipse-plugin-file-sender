@@ -1,5 +1,7 @@
 package GUI.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -54,16 +56,13 @@ public class McProfileStorage implements Serializable {
 	 * Constructor
 	 */
 	public McProfileStorage() {
-		// gui = new Gui();
 		if (hasStorageBeenInitialized()) {
 			initializeMember();
 
 		} else {
-			this.filePath = GlobalsDefs.serFilePath;
 			this.mc = new HashMap<String, Microcontroller>();
 			this.isFilepathSet = false;
 			this.isProfileSelected = false;
-
 		}
 	}
 
@@ -116,7 +115,7 @@ public class McProfileStorage implements Serializable {
 			FileOutputStream file = new FileOutputStream(GlobalsDefs.serFilePath);
 			ObjectOutputStream out = new ObjectOutputStream(file);
 
-			// Method for serialization of object
+			//serialization of object
 			out.writeObject(this);
 
 			out.close();
@@ -127,6 +126,30 @@ public class McProfileStorage implements Serializable {
 			Gui gui = new Gui();
 			gui.displayMessage("Error when writing serialization file.");
 		}
+	}
+
+	/**
+	 * deep copy of object
+	 * @return a deep copy of the object
+	 */
+	public McProfileStorage getDeepCopy() {
+		try {
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ObjectOutputStream oos = new ObjectOutputStream(baos);
+			oos.writeObject(this);
+
+			ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			return (McProfileStorage) ois.readObject();
+		} catch (IOException e) {
+			return null;
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+	}
+
+	public void setMc(HashMap<String, Microcontroller> mc) {
+		this.mc = mc;
 	}
 
 	/**
@@ -150,7 +173,7 @@ public class McProfileStorage implements Serializable {
 			FileInputStream file = new FileInputStream(GlobalsDefs.serFilePath);
 			ObjectInputStream in = new ObjectInputStream(file);
 
-			// Method for deserialization of object
+			// deserialization of object
 			mcs_temp = (McProfileStorage) in.readObject();
 			this.filePath = mcs_temp.getFilePath();
 			this.selectedMcProfile = mcs_temp.getSelectedMcProfile();
@@ -171,5 +194,17 @@ public class McProfileStorage implements Serializable {
 			Gui gui = new Gui();
 			gui.displayMessage("A ClassNotFoundException occurred.");
 		}
+	}
+
+	public boolean doesSelectedFileStillExist() {
+		boolean res = false;
+		if (isFilepathSet) {
+			File fileToCheck = new File(filePath);
+			res = fileToCheck.exists() && !fileToCheck.isDirectory();
+			if (res == false) {
+				isFilepathSet = false;
+			}
+		}
+		return res;
 	}
 }
